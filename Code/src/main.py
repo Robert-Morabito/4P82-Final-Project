@@ -5,9 +5,11 @@
 
 import time
 import random
+from multiprocessing import Pool, cpu_count
+from deap import base
 from GP import WordPredictGP
 from iofunction import parse_csv, parse_json, write_to_csv, write_qual
-from vectorizer import train_word2vec, vectorize, unvectorize
+from vectorizer import train_word2vec, w2v_vectorize, bert_vectorize, unvectorize
 
 
 def main():
@@ -23,13 +25,24 @@ def main():
     params = parse_json('data/parameters.json')
 
     # Vectorize datasets using word2vec
-    train_word2vec(train+test)
-    train_vec = vectorize(train)
-    test_vec = vectorize(test)
+    train_word2vec(train + test)
+    train_vec = w2v_vectorize(train)
+    test_vec = w2v_vectorize(test)
+    # train_vec = bert_vectorize(train)
+    # test_vec = bert_vectorize(test)
+
+    # Initialize multiprocessing pool
+    pool = Pool(cpu_count())
+    toolbox = base.Toolbox()
+    toolbox.register("map", pool.map)
 
     # Run GP evolution for training and testing
-    gp = WordPredictGP(train_vec, test_vec, params)
+    gp = WordPredictGP(train_vec, test_vec, params, toolbox=toolbox)  # Pass toolbox as an argument
     logs, predicts, test_fit = gp.run_gp()
+
+    # Close the pool and wait for the work to complete
+    pool.close()
+    pool.join()
 
     # Write results
     write_to_csv('data/Results.csv', logs, seed, test_fit)
@@ -42,6 +55,7 @@ def main():
         begins.append(test[i][:-1])
         targets.append(test[i][-1])
     write_qual('data/Qualitative.txt', begins, targets, predicts)
+
 
 if __name__ == '__main__':
     main()

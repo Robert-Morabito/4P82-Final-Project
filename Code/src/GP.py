@@ -1,81 +1,11 @@
 import numpy as np
 from deap import algorithms, base, creator, tools, gp
 from scipy.spatial import distance
-
-
-def vec_add(u, v):
-    """
-    Adds two vectors and normalizes them
-    :param u: First vector
-    :param v: Second vector
-    :return: Returns vector after adding
-    """
-    result = u + v
-    norm = np.linalg.norm(result)
-    return result / norm if norm != 0 else result
-
-
-def vec_sub(u, v):
-    """
-    Subtracts two vectors and normalizes them
-    :param u: First vector
-    :param v: Second vector
-    :return: Returns vector after subtracting
-    """
-    result = u - v
-    norm = np.linalg.norm(result)
-    return result / norm if norm != 0 else result
-
-
-def vec_mul(u, v):
-    """
-    Multiplies two vectors and normalizes them
-    :param u: First vector
-    :param v: Second vector
-    :return: Returns vector after multiplying
-    """
-    result = u * v
-    norm = np.linalg.norm(result)
-    return result / norm if norm != 0 else result
-
-
-def vec_prot_div(u, v):
-    """
-    Divides two vectors and normalizes them (protects against div by 0)
-    :param u: First vector
-    :param v: Second vector
-    :return: Returns vector after dividing
-    """
-    v = np.where(v == 0, 1, v)  # Ensures den will be 1 if ever 0
-    result = u / v
-    norm = np.linalg.norm(result)
-    return result / norm if norm != 0 else result
-
-
-def vec_sqr(u):
-    """
-    Calculates the square of a vector
-    :param u: Vector
-    :return: Returns vector after squaring
-    """
-    result = u ** 2
-    norm = np.linalg.norm(result)
-    return result / norm if norm != 0 else result
-
-
-def vec_root(u):
-    """
-    Calculates the root of a vector
-    :param u: Vector
-    :return: Returns vector after square root
-    """
-    result = np.sqrt(np.abs(u))
-    norm = np.linalg.norm(result)
-    return result / norm if norm != 0 else result
+from vector_operators import vec_add, vec_sub, vec_mul, vec_prot_div, vec_sqr, vec_root
 
 
 class WordPredictGP:
-    def __init__(self, train_data, test_data, params):
+    def __init__(self, train_data, test_data, params, toolbox):
         """
         Initializes the data, parameters, primitive set, and toolbox for a GP system
         :param train_data: Training data
@@ -89,9 +19,8 @@ class WordPredictGP:
         self.pop = params['pop']
         self.gens = params['gens']
         self.elit = params['elit']
-        # self.fiteval = 0
         self.pset = None
-        self.toolbox = None
+        self.toolbox = toolbox if toolbox is not None else base.Toolbox()
         self.setup_pset()
         self.setup_toolbox()
 
@@ -181,7 +110,7 @@ class WordPredictGP:
 
         # Initialize toolbox
         self.toolbox = base.Toolbox()
-        self.toolbox.register("expr_init", gp.genHalfAndHalf, pset=self.pset, min_=1, max_=5)
+        self.toolbox.register("expr_init", gp.genHalfAndHalf, pset=self.pset, min_=1, max_=3)
         self.toolbox.register("individual", tools.initIterate, creator.Individual, self.toolbox.expr_init)
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
         self.toolbox.register("compile", gp.compile, pset=self.pset)
