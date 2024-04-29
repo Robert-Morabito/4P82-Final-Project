@@ -1,10 +1,15 @@
 import gensim  # NOTE: For gensim to work you need scipy v1.12 or lower as it needs triu, v1.13 won't work
+import numpy as np
 from scipy.spatial import distance
 
 # Global model variable
 model = None
 
 def train_word2vec(dataset):
+    """
+    Trains a word2vec model given a dataset of words
+    :param dataset: Training data
+    """
     global model
     model = gensim.models.Word2Vec(dataset, vector_size=10, window=5, min_count=1, workers=4)
 
@@ -14,7 +19,7 @@ def vectorize(dataset):
     :param dataset: Dataset to be vectorized
     :return: Vectorized dataset
     """
-    return [[model.wv[word] for word in sentence] for sentence in dataset]
+    return np.array([[model.wv[word] for word in sentence if word in model.wv] for sentence in dataset])
 
 
 def unvectorize(vectors):

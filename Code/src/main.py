@@ -5,7 +5,7 @@
 
 import time
 import random
-from GP import wordPredictGP
+from GP import WordPredictGP
 from iofunction import parse_csv, parse_json
 from vectorizer import train_word2vec, vectorize, unvectorize
 
@@ -23,13 +23,14 @@ def main():
     params = parse_json('data/parameters.json')
 
     # Vectorize datasets using word2vec
-    train_word2vec(train)
+    train_word2vec(train+test)
     train_vec = vectorize(train)
     test_vec = vectorize(test)
 
     # Run GP evolution for training
-    GP = wordPredictGP(train_vec, test_vec, params)
-    a = 1
+    gp = WordPredictGP(train_vec, test_vec, params)
+    gp.train_gp()
+
     # Run GP testing
 
     # Return vectorized testing results back to english and save out to a .csv
