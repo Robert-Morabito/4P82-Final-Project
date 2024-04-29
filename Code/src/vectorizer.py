@@ -25,7 +25,7 @@ def vectorize(dataset):
 def unvectorize(vectors):
     """
     Finds the most similar word from a pretrained model to the vectorized word provided
-    :param vector: Vectorized word
+    :param vectors: Vectorized word
     :return: Word most similar to vector
     """
     words = []

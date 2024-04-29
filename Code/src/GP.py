@@ -1,5 +1,4 @@
 import numpy as np
-from random import random, choice
 from deap import algorithms, base, creator, tools, gp
 from scipy.spatial import distance
 
@@ -47,7 +46,7 @@ def vec_prot_div(u, v):
     :param v: Second vector
     :return: Returns vector after dividing
     """
-    v = np.where(v == 0, 1, v) # Ensures den will be 1 if ever 0
+    v = np.where(v == 0, 1, v)  # Ensures den will be 1 if ever 0
     result = u / v
     norm = np.linalg.norm(result)
     return result / norm if norm != 0 else result
@@ -90,54 +89,11 @@ class WordPredictGP:
         self.pop = params['pop']
         self.gens = params['gens']
         self.elit = params['elit']
-        #self.fiteval = 0
+        # self.fiteval = 0
         self.pset = None
         self.toolbox = None
         self.setup_pset()
         self.setup_toolbox()
-
-    # def cxUniform(self, ind1, ind2, indpb):
-    #     """
-    #     Uniform crossover operator
-    #     :param ind1: First individual
-    #     :param ind2: Second individual
-    #     :param indpb: Individual probability
-    #     :return: Result of crossover
-    #     """
-    #     return tools.cxUniform(ind1, ind2, indpb)
-    #
-    # def cxOnePoint(self, ind1, ind2):
-    #     """
-    #     One point crossover operator
-    #     :param ind1: First individual
-    #     :param ind2: Second individual
-    #     :return: Result of crossover
-    #     """
-    #     return tools.cxOnePoint(ind1, ind2)
-    #
-    # def cxTwoPoint(self, ind1, ind2):
-    #     """
-    #     Two point crossover operator
-    #     :param ind1: First individual
-    #     :param ind2: Second individual
-    #     :return: Result of crossover
-    #     """
-    #     return tools.cxTwoPoint(ind1, ind2)
-    #
-    # # This allows us to use multiple crossover methods like the paper, though we cannot do the same types as they did
-    # # using the built-in methods that come with DEAP
-    # def random_crossover(self, ind1, ind2):
-    #     """
-    #     Performs a random crossover from uniform, one point and two points.
-    #     :param ind1: First individual
-    #     :param ind2: Second individual
-    #     :return: Result of crossover
-    #     """
-    #     crossovers = [(self.cxUniform, {"indpb": 0.1}),
-    #                   (self.cxOnePoint, {}),
-    #                   (self.cxTwoPoint, {})]
-    #     cx, args = choice(crossovers)
-    #     return cx(ind1, ind2, **args)
 
     def fitness(self, individual, dataset):
         """
@@ -149,17 +105,46 @@ class WordPredictGP:
         func = self.toolbox.compile(expr=individual)
         similarities = []
         for entry in dataset:
-            inputs = entry[:-1]   # Prediction from first 5 words
+            inputs = entry[:-1]  # Prediction from first 5 words
             target = entry[-1]  # Target 6th word
             predicted = func(*inputs)
 
-            if np.linalg.norm(predicted) == 0 or np.linalg.norm(target) == 0:   # Avoid div/0 error in cosine sim
+            if np.linalg.norm(predicted) == 0 or np.linalg.norm(target) == 0:  # Avoid div/0 error in cosine sim
                 similarity = 0
             else:
                 similarity = 1 - distance.cosine(predicted, target)
             similarities.append(similarity)
         # Return the average similarity across the dataset
         return (np.mean(similarities),)
+
+    def testing(self, individual, dataset):
+        """
+        Calculates the fitness of the individual by finding cosine similarity between predicted and target vectors
+        :param individual: Current tree
+        :param dataset: Training dataset
+        :return: Returns cosine similarity between predicted and target
+        """
+        func = self.toolbox.compile(expr=individual)
+        vecs = []
+        i = 0
+        similarities = []
+        for entry in dataset:
+            inputs = entry[:-1]  # Prediction from first 5 words
+            target = entry[-1]  # Target 6th word
+            predicted = func(*inputs)
+
+            # Tracks a set number of outputs for the qualitative examples
+            if i < 10:
+                vecs.append(predicted)
+                i += 1
+
+            if np.linalg.norm(predicted) == 0 or np.linalg.norm(target) == 0:  # Avoid div/0 error in cosine sim
+                similarity = 0
+            else:
+                similarity = 1 - distance.cosine(predicted, target)
+            similarities.append(similarity)
+        # Return the average similarity across the dataset
+        return vecs, (np.mean(similarities),)
 
     def setup_pset(self):
         """
@@ -170,7 +155,8 @@ class WordPredictGP:
         output_type = np.ndarray
 
         # Initialize primitive set
-        self.pset = gp.PrimitiveSetTyped("MAIN", [input_type, input_type, input_type, input_type, input_type], output_type)
+        self.pset = gp.PrimitiveSetTyped("MAIN", [input_type, input_type, input_type, input_type, input_type],
+                                         output_type)
 
         # Binary operators
         self.pset.addPrimitive(vec_add, [input_type, input_type], output_type)
@@ -205,7 +191,7 @@ class WordPredictGP:
         self.toolbox.register("expr_mut", gp.genFull, min_=1, max_=2)
         self.toolbox.register("mutate", gp.mutUniform, expr=self.toolbox.expr_mut, pset=self.pset)
 
-    def train_gp(self):
+    def run_gp(self):
         """
         Evolves a GP model designed to perform word prediction
         :return:
@@ -213,7 +199,9 @@ class WordPredictGP:
         # Initialization
         pop = self.toolbox.population(n=self.pop)
         hof = tools.HallOfFame(self.elit)
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
+        stats_fit = tools.Statistics(lambda ind: ind.fitness.values)
+        stats_size = tools.Statistics(len)
+        stats = tools.MultiStatistics(fitness=stats_fit, size=stats_size)
         stats.register("avg", np.mean)
         stats.register("std", np.std)
         stats.register("min", np.min)
@@ -222,30 +210,7 @@ class WordPredictGP:
         pop, logs = algorithms.eaSimple(pop, self.toolbox, cxpb=self.cx, mutpb=self.mut, ngen=self.gens,
                                         stats=stats, verbose=True, halloffame=hof)
 
-        # # Train GP system using what was described in the paper
-        # while self.fiteval < self.maxfiteval:
-        #     for ind in pop:
-        #         entry = choice(self.train_data)
-        #         ind.fitness.values = self.toolbox.evaluate(ind, entry)
-        #
-        #         # Incase we exceed during the loop
-        #         if self.fiteval >= self.maxfiteval:
-        #             break
-        #
-        #         # Perform tournament selection and sort by fitness values
-        #         tournament = self.toolbox.select(pop, 3)
-        #         tournament.sort(key=lambda ind: ind.fitness.values, reverse=True)
-        #
-        #         # Mate the top 2 and get the best child
-        #         ch1, ch2 = self.toolbox.mate(tournament[0], tournament[1])
-        #         child = ch1 if ch1.fitness >= ch2.fitness else ch2
-        #
-        #         # Mutate and evaluate result
-        #         self.toolbox.mutate(child)
-        #         #child.fitness.values = self.toolbox.evaluate(ind, child)
-        #
-        #         # Replace worst in the tournament
-        #         pop.pop(pop.index(tournament[-1]))
-        #         pop.append(child)
+        # Run the testing set
+        vecs, test_fit = self.testing(hof[0], self.test_data)
 
-        return pop, stats, hof
+        return logs, vecs, test_fit[0]

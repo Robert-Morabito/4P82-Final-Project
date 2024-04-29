@@ -6,14 +6,14 @@
 import time
 import random
 from GP import WordPredictGP
-from iofunction import parse_csv, parse_json
+from iofunction import parse_csv, parse_json, write_to_csv, write_qual
 from vectorizer import train_word2vec, vectorize, unvectorize
 
 
 def main():
     # Initialize random seed using current seconds
-    #random.seed(int(time.time()))
-    random.seed(10)  # Temp for testing
+    seed = time.time()
+    random.seed(seed)
 
     # Import training and testing data and parameters, and randomizing datasets
     train = parse_csv('data/MNH-Training-Scaled.csv')
@@ -27,14 +27,21 @@ def main():
     train_vec = vectorize(train)
     test_vec = vectorize(test)
 
-    # Run GP evolution for training
+    # Run GP evolution for training and testing
     gp = WordPredictGP(train_vec, test_vec, params)
-    gp.train_gp()
+    logs, predicts, test_fit = gp.run_gp()
 
-    # Run GP testing
+    # Write results
+    write_to_csv('data/Results.csv', logs, seed, test_fit)
 
-    # Return vectorized testing results back to english and save out to a .csv
-
+    # Write qualitative results
+    begins = []
+    targets = []
+    predicts = unvectorize(predicts)
+    for i in range(len(predicts)):
+        begins.append(test[i][:-1])
+        targets.append(test[i][-1])
+    write_qual('data/Qualitative.txt', begins, targets, predicts)
 
 if __name__ == '__main__':
     main()

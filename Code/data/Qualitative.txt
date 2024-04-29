@@ -1,0 +1,10 @@
+Input: woods hangs on to number. Target: one. Predicted: number
+Input: advocates aim to strengthen microfinance. Target: providers. Predicted: microfinance
+Input: mariners lose kwasnik for the. Target: season. Predicted: the
+Input: uday sareen speaks to the. Target: business. Predicted: the
+Input: tasmanian festival of bridge in. Target: launceston. Predicted: in
+Input: roosters rubbish rumours of carney. Target: deal. Predicted: carney
+Input: elective surgery up in tas. Target: hospitals. Predicted: tas
+Input: australian coffee culture in high. Target: demand. Predicted: high
+Input: perpetual cuts large chunk of. Target: workforce. Predicted: of
+Input: councils seek better mining revenue. Target: deal. Predicted: revenue
