@@ -1,11 +1,9 @@
 import gensim  # NOTE: For gensim to work you need scipy v1.12 or lower as it needs triu, v1.13 won't work
 import numpy as np
-from sentence_transformers import SentenceTransformer
 from scipy.spatial import distance
 
 # Global model variable
 w2v_model = None
-bert_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 
 def train_word2vec(dataset):
@@ -14,7 +12,7 @@ def train_word2vec(dataset):
     :param dataset: Training data
     """
     global w2v_model
-    w2v_model = gensim.models.Word2Vec(dataset, vector_size=10, window=5, min_count=1, workers=4)
+    w2v_model = gensim.models.Word2Vec(dataset, vector_size=10, window=5, min_count=1, workers=16, epochs=20)
 
 
 def w2v_vectorize(dataset):
@@ -24,18 +22,6 @@ def w2v_vectorize(dataset):
     :return: Vectorized dataset
     """
     return np.array([[w2v_model.wv[word] for word in sentence if word in w2v_model.wv] for sentence in dataset])
-
-def bert_vectorize(dataset):
-    """
-    Vectorizes an entire dataset of sentences using BERT
-    :param dataset: Dataset to be vectorized
-    :return: Vectorized dataset
-    """
-    # Flatten dataset to a list of sentences
-    sentences = [' '.join(sentence) for sentence in dataset]
-    # Generate embeddings for each sentence
-    embeddings = bert_model.encode(sentences)
-    return np.array(embeddings)
 
 
 def unvectorize(vectors):

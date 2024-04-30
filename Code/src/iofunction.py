@@ -24,7 +24,7 @@ def parse_csv(filename):
     return lines
 
 
-def write_to_csv(filename, data, seed, test):
+def write_to_csv(filename, data, seed, test, best_tree):
     """
     Write GP statistics to a CSV file
     :param test: Testing scores
@@ -34,7 +34,7 @@ def write_to_csv(filename, data, seed, test):
     """
     with open(filename, 'w', newline='') as file:
         # Fields
-        headers = ['gen', 'seed', 'avg_fit', 'max_fit', 'avg_size', 'max_size', 'test']
+        headers = ['gen', 'seed', 'avg_fit', 'max_fit', 'avg_size', 'max_size', 'test', 'best_tree']
         write = csv.DictWriter(file, fieldnames=headers)
         write.writeheader()
 
@@ -57,6 +57,7 @@ def write_to_csv(filename, data, seed, test):
             })
 
         write.writerow({'test': test})
+        write.writerow({'best_tree': best_tree})
 
 
 def write_qual(filename, begin, tar, pred):

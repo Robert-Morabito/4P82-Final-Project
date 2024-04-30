@@ -110,7 +110,7 @@ class WordPredictGP:
 
         # Initialize toolbox
         self.toolbox = base.Toolbox()
-        self.toolbox.register("expr_init", gp.genHalfAndHalf, pset=self.pset, min_=1, max_=3)
+        self.toolbox.register("expr_init", gp.genHalfAndHalf, pset=self.pset, min_=1, max_=5)
         self.toolbox.register("individual", tools.initIterate, creator.Individual, self.toolbox.expr_init)
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
         self.toolbox.register("compile", gp.compile, pset=self.pset)
@@ -142,4 +142,6 @@ class WordPredictGP:
         # Run the testing set
         vecs, test_fit = self.testing(hof[0], self.test_data)
 
-        return logs, vecs, test_fit[0]
+        print(hof[0])
+
+        return logs, vecs, test_fit[0], hof[0]

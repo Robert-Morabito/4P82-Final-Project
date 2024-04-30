@@ -1,0 +1,10 @@
+Input: nadal leads favourites into third. Target: round. Predicted: nsw
+Input: conditions ease but fires continue. Target: uncontrolled. Predicted: and
+Input: man stabbed during melbourne beach. Target: brawl. Predicted: record
+Input: scores injured as earthquakes rattle. Target: japan. Predicted: injured
+Input: rail freight deal cuts truck. Target: traffic. Predicted: national
+Input: lucky 13 for federer against. Target: nieminen. Predicted: violence
+Input: moves to speed up coronial. Target: inquiries. Predicted: up
+Input: police prepare for country music. Target: influx. Predicted: canberra
+Input: downpour fails to dampen outback. Target: opera. Predicted: help
+Input: illegal hunting in act national. Target: parks. Predicted: about
